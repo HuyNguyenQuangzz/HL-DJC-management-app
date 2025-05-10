@@ -3,11 +3,37 @@ const User = require("../models/user.model");
 
 // Đăng ký người dùng
 exports.signup = async (req, res) => {
-  const { username, password, role } = req.body;
+  const { username, password, level } = req.body;
+  //validation input
+  if (!username || !password) {
+    return res
+      .status(400)
+      .json({ message: "Username and password are required" });
+  } else if (password.length < 6) {
+    return res
+      .status(400)
+      .json({ message: "Password must be at least 6 characters" });
+  } else {
+    const existingUser = await User.findOne({ username });
+    if (existingUser) {
+      return res.status(400).json({ message: "Username already exists" });
+    }
+  }
+
   try {
-    const user = new User({ username, password, role: role || "user" });
+    const user = new User({ username, password, level: level || "user" });
     await user.save();
-    res.status(201).json({ message: "User created" });
+
+    const userWithLevel = {
+      ...user._doc,
+      level: level || "user",
+      password: undefined,
+    };
+    res.status(201).json({
+      success: true,
+      message: "User created successfully",
+      user: userWithLevel,
+    });
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
@@ -16,6 +42,17 @@ exports.signup = async (req, res) => {
 // Đăng nhập
 exports.login = async (req, res) => {
   const { username, password } = req.body;
+  //validation input
+  if (!username || !password) {
+    return res
+      .status(400)
+      .json({ message: "Username and password are required" });
+  } else {
+    const existingUser = await User.findOne({ username });
+    if (!existingUser) {
+      return res.status(404).json({ message: "User not found.Please try again!" });
+    }
+  }
   try {
     const user = await User.findOne({ username });
     if (!user || !(await user.comparePassword(password))) {
@@ -23,11 +60,17 @@ exports.login = async (req, res) => {
     }
 
     const token = jwt.sign(
-      { id: user._id, username: user.username, role: user.role },
+      { id: user._id, username: user.username, level: user.level },
       process.env.JWT_SECRET,
       { expiresIn: "1h" }
     );
-    res.json({ token });
+    // show user with token
+    const userWithToken = {
+      token,
+      ...user._doc,
+      password: undefined,
+    };
+    res.status(200).json(userWithToken);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -35,11 +78,11 @@ exports.login = async (req, res) => {
 // Lấy thông tin người dùng hiện tại
 exports.getCurrentUser = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select("username role");
+    const user = await User.findById(req.user.id).select("username level");
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-    res.json({ username: user.username, role: user.role });
+    res.json({ username: user.username, level: user.level });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -55,6 +98,20 @@ exports.changePassword = async (req, res) => {
     }
     user.password = newPassword; // Mật khẩu sẽ được hash bởi pre-save middleware
     await user.save();
+    res.json({ message: "Password changed successfully" });
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+};
+
+// Forgot password
+exports.forgotPassword = async (req, res) => {
+  const { email } = req.body;
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
     res.json({ message: "Password changed successfully" });
   } catch (err) {
     res.status(400).json({ message: err.message });

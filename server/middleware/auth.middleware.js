@@ -18,7 +18,7 @@ const authMiddleware = (req, res, next) => {
 
 // Middleware kiểm tra quyền admin
 const adminMiddleware = (req, res, next) => {
-  if (req.user.role !== "admin") {
+  if (req.user.level !== "admin") {
     return res.status(403).json({ message: "Admin access required" });
   }
   next();

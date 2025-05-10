@@ -16,71 +16,57 @@ const getStatusColor = (status) => {
   }
 };
 
-function RequestList() {
-  const {
-    requests,
-    user,
-    fetchRequests,
-    fetchCurrentUser,
-    updateRequest,
-    deleteRequest,
-  } = useRequestStore();
-  const isAdmin = user?.role === "admin";
+function DataList() {
+  const { data, user, fetchData, fetchCurrentUser, updateData, deleteData } =
+    useRequestStore();
+  const isAdmin = user?.level === "admin";
 
   useEffect(() => {
     if (localStorage.getItem("token")) {
-      fetchCurrentUser(); // Lấy thông tin người dùng
-      fetchRequests(); // Lấy danh sách request
+      fetchCurrentUser();
+      fetchData();
     }
-  }, [fetchCurrentUser, fetchRequests]);
+  }, [fetchCurrentUser, fetchData]);
 
   const handleApprove = async (id) => {
     try {
-      await updateRequest(id, { status: "approved" });
-      notification.success({ message: "Request approved" });
+      await updateData(id, { status: "approved" });
+      notification.success({ message: "Data approved" });
     } catch (err) {
-      notification.error({
-        message: err.message || "Failed to approve request",
-      });
+      notification.error({ message: err.message || "Failed to approve data" });
     }
   };
 
   const handleComplete = async (id) => {
     try {
-      await updateRequest(id, { status: "completed" });
-      notification.success({ message: "Request marked as completed" });
+      await updateData(id, { status: "completed" });
+      notification.success({ message: "Data marked as completed" });
     } catch (err) {
-      notification.error({
-        message: err.message || "Failed to complete request",
-      });
+      notification.error({ message: err.message || "Failed to complete data" });
     }
   };
 
   const handleReject = async (id) => {
     try {
-      await updateRequest(id, { status: "rejected" });
-      notification.success({ message: "Request rejected" });
+      await updateData(id, { status: "rejected" });
+      notification.success({ message: "Data rejected" });
     } catch (err) {
-      notification.error({
-        message: err.message || "Failed to reject request",
-      });
+      notification.error({ message: err.message || "Failed to reject data" });
     }
   };
 
   const handleDelete = async (id) => {
     try {
-      await deleteRequest(id);
-      notification.success({ message: "Request deleted" });
+      await deleteData(id);
+      notification.success({ message: "Data deleted" });
     } catch (err) {
-      notification.error({
-        message: err.message || "Failed to delete request",
-      });
+      notification.error({ message: err.message || "Failed to delete data" });
     }
   };
 
   return (
     <List
-      dataSource={requests}
+      dataSource={data}
       renderItem={(item) => (
         <List.Item
           className={`p-4 mb-4 border rounded-lg ${getStatusColor(
@@ -89,8 +75,16 @@ function RequestList() {
         >
           <div className="flex justify-between w-full">
             <div>
-              <h3 className="text-lg font-semibold">{item.title}</h3>
-              <p>{item.description}</p>
+              <h3 className="text-lg font-semibold">{item.company}</h3>
+              <p>
+                <strong>Item Type:</strong> {item.itemType?.name || "Unknown"}
+              </p>
+              <p>
+                <strong>Amount:</strong> {item.amount}
+              </p>
+              <p>
+                <strong>Note:</strong> {item.note || "N/A"}
+              </p>
               <p className="text-sm text-gray-500">
                 Status: {item.status.toUpperCase()}
               </p>
@@ -125,4 +119,4 @@ function RequestList() {
   );
 }
 
-export default RequestList;
+export default DataList;

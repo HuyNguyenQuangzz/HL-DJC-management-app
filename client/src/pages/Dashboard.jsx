@@ -1,49 +1,60 @@
-import { Button, Input, notification } from "antd";
-import { useState } from "react";
-import RequestList from "../components/RequestList";
+import { useEffect } from "react";
+import { Statistic, Row, Col, List, notification } from "antd";
 import useRequestStore from "../store/useRequestStore";
 
-function Dashboard({ onLogout }) {
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const addRequest = useRequestStore((state) => state.addRequest);
+function Dashboard() {
+  const { data, fetchData } = useRequestStore();
 
-  const handleSubmitRequest = async () => {
-    if (!title.trim()) {
-      notification.error({ message: "Title is required" });
-      return;
-    }
-    await addRequest({ title, description });
-    setTitle("");
-    setDescription("");
-    notification.success({ message: "Request submitted successfully" });
-  };
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  const pending = data.filter((item) => item.status === "pending").length;
+  const doing = data.filter((item) => item.status === "approved").length;
+  const completed = data.filter((item) => item.status === "completed").length;
+  const recent = data.slice(0, 5);
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <div className="flex justify-end mb-4">
-        <Button onClick={onLogout} type="link" className="text-white">
-          Logout
-        </Button>
-      </div>
-      <div className="mb-6 p-6 bg-white rounded-lg shadow">
-        <Input
-          placeholder="Request Title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          className="mb-4"
+    <div className="max-w-4xl mx-auto pt-20 p-6">
+      <Row gutter={16}>
+        <Col span={8}>
+          <div className="p-4 bg-white rounded-lg shadow">
+            <Statistic title="Pending Requests" value={pending} />
+          </div>
+        </Col>
+        <Col span={8}>
+          <div className="p-4 bg-white rounded-lg shadow">
+            <Statistic title="Doing Requests" value={doing} />
+          </div>
+        </Col>
+        <Col span={8}>
+          <div className="p-4 bg-white rounded-lg shadow">
+            <Statistic title="Completed Requests" value={completed} />
+          </div>
+        </Col>
+      </Row>
+      <div className="mt-6 p-6 bg-white rounded-lg shadow">
+        <h3 className="text-lg font-semibold mb-4">Recent Requests</h3>
+        <List
+          dataSource={recent}
+          renderItem={(item) => (
+            <List.Item>
+              <div>
+                <h4 className="text-md font-semibold">{item.company}</h4>
+                <p>
+                  <strong>Status:</strong> {item.status.toUpperCase()}
+                </p>
+                <p>
+                  <strong>Amount:</strong> {item.amount}
+                </p>
+                <p>
+                  <strong>Item Type:</strong> {item.itemType?.name || "Unknown"}
+                </p>
+              </div>
+            </List.Item>
+          )}
         />
-        <Input.TextArea
-          placeholder="Description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          className="mb-4"
-        />
-        <Button type="primary" onClick={handleSubmitRequest} className="w-full">
-          Submit Request
-        </Button>
       </div>
-      <RequestList />
     </div>
   );
 }

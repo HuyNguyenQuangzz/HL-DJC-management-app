@@ -8,7 +8,7 @@ function Profile() {
   const [form] = Form.useForm();
 
   useEffect(() => {
-    fetchCurrentUser(); // Lấy thông tin người dùng khi vào trang
+    fetchCurrentUser();
   }, [fetchCurrentUser]);
 
   const handleChangePassword = async (values) => {
@@ -30,16 +30,16 @@ function Profile() {
   };
 
   return (
-    <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow">
-      <h2 className="text-xl font-semibold mb-4">Profile</h2>
+    <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow ">
+      <h2 className="text-xl font-semibold mb-4 text-center">Profile</h2>
       {user ? (
         <div className="mb-6">
           <p>
             <strong>Username:</strong> {user.username}
           </p>
           <p>
-            <strong>Role:</strong>{" "}
-            {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+            <strong>Level:</strong>{" "}
+            {user.level.charAt(0).toUpperCase() + user.level.slice(1)}
           </p>
         </div>
       ) : (

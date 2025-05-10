@@ -1,2 +1,3 @@
-"# HL-DJC-management-app" 
-git init
+# HL-DJC-management-app
+
+## HappyCat 2025
