@@ -1,79 +1,104 @@
-import { useEffect } from "react";
-import { Button, Input, Select, notification } from "antd";
-import { useState } from "react";
-import useRequestStore from "../store/useRequestStore";
-
-const { Option } = Select;
+import { useState, useEffect } from "react";
+import axios from "axios";
+import { useAuthStore } from "../stores/authStore";
 
 function Home() {
-  const { itemTypes, fetchItemTypes, addData } = useRequestStore();
-  const [company, setCompany] = useState("");
-  const [itemType, setItemType] = useState("");
-  const [amount, setAmount] = useState("");
-  const [note, setNote] = useState("");
+  const { user } = useAuthStore();
+  const [form, setForm] = useState({
+    itemType: "",
+    company: "",
+    amount: "",
+    note: "",
+  });
+  const [itemTypes, setItemTypes] = useState([]);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    fetchItemTypes();
-  }, [fetchItemTypes]);
+    axios
+      .get("http://localhost:3000/api/item-types", {
+        headers: { Authorization: `Bearer ${useAuthStore.getState().token}` },
+      })
+      .then((res) => setItemTypes(res.data))
+      .catch(() => setError("Failed to fetch item types"));
+  }, []);
 
-  const handleSubmitData = async () => {
-    if (!company.trim() || !itemType || !amount) {
-      notification.error({
-        message: "Company, Item Type, and Amount are required",
-      });
-      return;
-    }
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     try {
-      await addData({ company, itemType, amount: parseFloat(amount), note });
-      setCompany("");
-      setItemType("");
-      setAmount("");
-      setNote("");
-      notification.success({ message: "Request submitted successfully" });
+      await axios.post(
+        "http://localhost:3000/api/data",
+        { ...form, user: user._id },
+        {
+          headers: { Authorization: `Bearer ${useAuthStore.getState().token}` },
+        }
+      );
+      alert("Request created");
+      setForm({ itemType: "", company: "", amount: "", note: "" });
     } catch (err) {
-      notification.error({ message: "Failed to submit request" });
+      setError("Failed to create request");
     }
   };
 
   return (
-    <div className="max-w-4xl mx-auto pt-20">
-      <div className="mb-6 p-6 bg-white rounded-lg shadow">
-        <h2 className="text-xl font-semibold mb-4">Create New Request</h2>
-        <Input
-          placeholder="Company"
-          value={company}
-          onChange={(e) => setCompany(e.target.value)}
-          className="mb-4"
-        />
-        <Select
-          placeholder="Select Item Type"
-          value={itemType}
-          onChange={(value) => setItemType(value)}
-          className="w-full mb-4"
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="text-2xl font-bold mb-4">Create Request</h1>
+      <form onSubmit={handleSubmit} className="max-w-md mx-auto">
+        <div className="mb-4">
+          <label className="block mb-1">Item Type</label>
+          <select
+            value={form.itemType}
+            onChange={(e) => setForm({ ...form, itemType: e.target.value })}
+            className="w-full p-2 border rounded"
+            required
+          >
+            <option value="">Select Item Type</option>
+            {itemTypes.map((type) => (
+              <option
+                key={type._id}
+                value={type._id}
+                className="hover:bg-blue-300"
+              >
+                {type.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="mb-4">
+          <label className="block mb-1">Company</label>
+          <input
+            type="text"
+            value={form.company}
+            onChange={(e) => setForm({ ...form, company: e.target.value })}
+            className="w-full p-2 border rounded"
+            required
+          />
+        </div>
+        <div className="mb-4">
+          <label className="block mb-1">Amount</label>
+          <input
+            type="number"
+            value={form.amount}
+            onChange={(e) => setForm({ ...form, amount: e.target.value })}
+            className="w-full p-2 border rounded"
+            required
+          />
+        </div>
+        <div className="mb-4">
+          <label className="block mb-1">Note</label>
+          <textarea
+            value={form.note}
+            onChange={(e) => setForm({ ...form, note: e.target.value })}
+            className="w-full p-2 border rounded"
+          />
+        </div>
+        {error && <p className="text-red-500 mb-4">{error}</p>}
+        <button
+          type="submit"
+          className="bg-blue-600 text-white px-4 py-2 rounded"
         >
-          {itemTypes.map((type) => (
-            <Option key={type._id} value={type._id}>
-              {type.name}
-            </Option>
-          ))}
-        </Select>
-        <Input
-          placeholder="Amount"
-          type="number"
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-          className="mb-4"
-        />
-        <Input.TextArea
-          placeholder="Note"
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-          className="mb-4"
-        />
-        <Button type="primary" onClick={handleSubmitData} className="w-full">
           Submit Request
-        </Button>
-      </div>
+        </button>
+      </form>
     </div>
   );
 }

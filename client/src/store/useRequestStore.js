@@ -6,6 +6,23 @@ const useRequestStore = create((set) => ({
   itemTypes: [],
   history: [],
   user: null,
+  requests: [],
+  updateRequest: (id, newType) => {
+    set((state) => {
+      const now = new Date().toISOString();
+      const updated = state.requests.map((req) =>
+        req.id === id
+          ? {
+              ...req,
+              type: newType,
+              updatedAt: now,
+              typeHistory: [...(req.typeHistory || []), { newType, time: now }],
+            }
+          : req
+      );
+      return { requests: updated };
+    });
+  },
   fetchCurrentUser: async () => {
     try {
       const token = localStorage.getItem("token");
