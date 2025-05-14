@@ -1,15 +1,17 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuthStore } from "../store/useaAuthStore";
+// import { useAuthStore } from "../store/useAuthStore";
+import useAuthStore from "../store/authStore";
+
 
 function Navbar() {
-  const { user, clearAuth } = useAuthStore();
+  const { user, logout } = useAuthStore();
   const navigate = useNavigate();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   const handleLogout = () => {
-    clearAuth();
+    logout();
     navigate("/login");
   };
 

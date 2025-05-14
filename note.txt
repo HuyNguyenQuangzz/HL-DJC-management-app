@@ -1,0 +1,9 @@
+for mobile-app
+
+npx create-expo-app expo-auth-app
+cd expo-auth-app
+
+npm install axios @react-navigation/native @react-navigation/stack @react-native-async-storage/async-storage react-native-gesture-handler
+npx expo install expo
+
+npx expo start

@@ -1,71 +1,63 @@
-import { Form, Input, Button, notification, Divider } from "antd";
-import { useNavigate } from "react-router-dom";
-import React, { useState } from "react";
-import { useAuthStore } from "../store/useAuthStore";
+// pages/Login.jsx
+import { useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import useAuthStore from "../store/authStore";
 
-function Login() {
+const Login = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const { login, isLoading, error, user } = useAuthStore();
+  const login = useAuthStore((state) => state.login);
+  const error = useAuthStore((state) => state.error);
+  const loading = useAuthStore((state) => state.loading);
   const navigate = useNavigate();
+  const location = useLocation();
 
-  const handleSubmit = async () => {
-    // e.preventDefault();
-    await login(username, password);
+  const from = location.state?.from?.pathname || "/dashboard";
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      await login(username, password);
+      navigate(from, { replace: true });
+    } catch (error) {
+      // Error is already handled in the store
+    }
   };
 
   return (
-    <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow mt-16">
-      <h2 className="text-xl font-semibold mb-4">Login</h2>
-      {error && <p className="text-red-500 mb-2">{error}</p>}
-      {user && (
-        <p className="text-green-600 mb-2">
-          Xin chào, {user.username || user.level}
-        </p>
-      )}
-      <Form onFinish={handleSubmit}>
-        <Form.Item
-          name="username"
-          rules={[{ required: true, message: "Please input your username!" }]}
-        >
-          <Input placeholder="Username" />
-        </Form.Item>
-        <Form.Item
-          name="password"
-          rules={[{ required: true, message: "Please input your password!" }]}
-        >
-          <Input.Password placeholder="Password" />
-        </Form.Item>
-        <Button
-          type="primary"
-          htmlType="submit"
-          className="w-full"
-          disabled={isLoading}
-        >
-          {isLoading ? "Đang đăng nhập..." : "Đăng nhập"}
-          {/* Login */}
-        </Button>
-        {/* chưa có account, signup */}
-        <p className="text-center mt-4">
-          Don't have an account?{" "}
-          <a href="/signup" className="text-blue-500">
-            Sign up
-          </a>
-        </p>
-        {/* login with google account */}
-        <Divider>Or</Divider>
-        <Button
-          type="primary"
-          className="w-full"
-          onClick={() => {
-            window.open("http://localhost:5000/api/auth/google", "_self");
-          }}
-        >
-          Login with Google
-        </Button>
-      </Form>
+    <div className="login-container">
+      <h2>Login</h2>
+      {error && <p className="error-message">{error}</p>}
+      <form onSubmit={handleSubmit}>
+        <div className="form-group">
+          <label htmlFor="username">Username:</label>
+          <input
+            id="username"
+            type="text"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            required
+            autoComplete="username"
+          />
+        </div>
+        <div className="form-group">
+          <label htmlFor="password">Password:</label>
+          <input
+            id="password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            autoComplete="current-password"
+          />
+        </div>
+        <button type="submit" className="login-button" disabled={loading}>
+          {loading ? "Logging in..." : "Login"}
+        </button>
+      </form>
     </div>
   );
-}
+};
 
 export default Login;

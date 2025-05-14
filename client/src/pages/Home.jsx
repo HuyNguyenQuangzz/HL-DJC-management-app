@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { useAuthStore } from "../stores/authStore";
+
+import useAuthStore from "../store/authStore";
+
+// import { useAuthStore } from "../store/useAuthStore";
 
 function Home() {
   const { user } = useAuthStore();

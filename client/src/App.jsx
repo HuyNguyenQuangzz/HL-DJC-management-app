@@ -1,72 +1,33 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import Navbar from "./components/Navbar";
+import React, { useContext } from "react";
+import { Button } from "antd";
+import { AuthContext } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
-import Login from "./pages/Login";
-import Signup from "./pages/Signup";
-import Home from "./pages/Home";
-import Dashboard from "./pages/Dashboard";
-import History from "./pages/History";
-import Profile from "./pages/Profile";
-import { useAuthStore } from "./stores/authStore";
+import UserLayout from "./layouts/UserLayout";
+import AdminLayout from "./layouts/AdminLayout";
 
-function App() {
-  const { user } = useAuthStore();
+const App = () => {
+  const { isAuthenticated, userLevel, user, logout } = useContext(AuthContext);
 
   return (
-    <BrowserRouter>
-      <Navbar />
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
-        <Route
-          path="/home"
-          element={
-            <ProtectedRoute requiredLevel="user">
-              <Home />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute requiredLevel="admin">
-              <Dashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/history"
-          element={
-            <ProtectedRoute requiredLevel="admin">
-              <History />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/profile"
-          element={
-            <ProtectedRoute>
-              <Profile />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/"
-          element={
-            <Navigate
-              to={
-                user
-                  ? user.level === "admin"
-                    ? "/dashboard"
-                    : "/home"
-                  : "/login"
-              }
-            />
-          }
-        />
-      </Routes>
-    </BrowserRouter>
+    <div>
+      {isAuthenticated && (
+        <div className="flex justify-end p-4">
+          <span>
+            Welcome, {user?.username} (Level: {userLevel})
+          </span>
+          <Button onClick={logout} type="primary" danger>
+            Logout
+          </Button>
+        </div>
+      )}
+      <ProtectedRoute allowedLevel="user">
+        {userLevel === "user" && <UserLayout />}
+      </ProtectedRoute>
+      <ProtectedRoute allowedLevel="admin">
+        {userLevel === "admin" && <AdminLayout />}
+      </ProtectedRoute>
+    </div>
   );
-}
+};
 
 export default App;

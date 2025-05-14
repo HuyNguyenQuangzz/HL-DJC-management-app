@@ -12,7 +12,12 @@ require("dotenv").config();
 
 const app = express();
 
-app.use(cors());
+app.use(
+  cors({
+    origin: "http://localhost:3000", // Chỉ định origin thay vì dùng '*'
+    credentials: true,
+  })
+);
 app.use(express.json());
 
 // Kết nối MongoDB
@@ -21,8 +26,8 @@ dbConnect();
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/phe-duyet", dataRoutes);
-app.use('/api/item-types', itemTypeRoutes);
-app.use('/api/history', historyRoutes);
+app.use("/api/item-types", itemTypeRoutes);
+app.use("/api/history", historyRoutes);
 
 const PORT = process.env.PORT || 5000;
 // show host and port

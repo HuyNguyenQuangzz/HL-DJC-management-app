@@ -1,13 +1,38 @@
 import { Form, Input, Button, notification } from "antd";
-import axios from "axios";
+// import { useAuthStore } from "../store/useAuthStore";
+import useAuthStore from "../store/authStore";
+
+import { useNavigate } from "react-router-dom";
 
 function Signup() {
+  // const handleSignup = async (values) => {
+  //   try {
+  //     // await axios.post("http://localhost:5000/api/auth/signup", values);
+  //     axios.post("http://localhost:5000/api/auth/signup", values, {
+  //       withCredentials: true,
+  //     });
+
+  //     notification.success({
+  //       message: "Signed up successfully. Please login.",
+  //     });
+  //   } catch (err) {
+  //     notification.error({
+  //       message: err.response?.data?.message || "Signup failed",
+  //     });
+  //   }
+  // };
+
+  const { signup, isLoading, error, user } = useAuthStore();
+  const navigate = useNavigate();
+  const [form] = Form.useForm();
+
   const handleSignup = async (values) => {
     try {
-      await axios.post("http://localhost:5000/api/auth/signup", values);
+      await signup(values.username, values.password, values.role);
       notification.success({
         message: "Signed up successfully. Please login.",
       });
+      navigate("/login");
     } catch (err) {
       notification.error({
         message: err.response?.data?.message || "Signup failed",
@@ -43,6 +68,13 @@ function Signup() {
         <Button type="primary" htmlType="submit" className="w-full">
           Signup
         </Button>
+        {/* already have an account */}
+        <p className="mt-4 text-center">
+          Already have an account?{" "}
+          <a href="/login" className="text-blue-500">
+            Login
+          </a>
+        </p>
       </Form>
     </div>
   );
