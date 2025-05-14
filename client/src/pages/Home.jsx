@@ -1,109 +1,150 @@
-import { useState, useEffect } from "react";
-import axios from "axios";
+import React, { useContext, useEffect, useState } from "react";
+import { AuthContext } from "../context/AuthContext";
+import { Card, Col, Row, Statistic, Typography, Spin, Alert } from "antd";
+import {
+  FileTextOutlined,
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+  ClockCircleOutlined,
+  TrophyOutlined,
+} from "@ant-design/icons";
 
-import useAuthStore from "../store/authStore";
+const { Title } = Typography;
 
-// import { useAuthStore } from "../store/useAuthStore";
-
-function Home() {
-  const { user } = useAuthStore();
-  const [form, setForm] = useState({
-    itemType: "",
-    company: "",
-    amount: "",
-    note: "",
+const Home = () => {
+  const { user, isAuthenticated } = useContext(AuthContext);
+  const [stats, setStats] = useState({
+    total: 0,
+    approved: 0,
+    rejected: 0,
+    doing: 0,
+    done: 0,
   });
-  const [itemTypes, setItemTypes] = useState([]);
-  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    axios
-      .get("http://localhost:3000/api/item-types", {
-        headers: { Authorization: `Bearer ${useAuthStore.getState().token}` },
-      })
-      .then((res) => setItemTypes(res.data))
-      .catch(() => setError("Failed to fetch item types"));
-  }, []);
+    if (!isAuthenticated || !user) return;
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      await axios.post(
-        "http://localhost:3000/api/data",
-        { ...form, user: user._id },
-        {
-          headers: { Authorization: `Bearer ${useAuthStore.getState().token}` },
-        }
-      );
-      alert("Request created");
-      setForm({ itemType: "", company: "", amount: "", note: "" });
-    } catch (err) {
-      setError("Failed to create request");
-    }
-  };
+    const fetchStats = async () => {
+      setLoading(true);
+      try {
+        // Mock data (replace with actual API call)
+        const mockStats = {
+          total: 25,
+          approved: 10,
+          rejected: 5,
+          doing: 7,
+          done: 3,
+        };
+        setStats(mockStats);
+
+        // Example API call (uncomment and adjust for your backend)
+        /*
+        const response = await fetch(`/api/user/${user.id}/requests/stats`, {
+          headers: { Authorization: `Bearer ${user.token}` },
+        });
+        if (!response.ok) throw new Error("Failed to fetch stats");
+        const data = await response.json();
+        setStats(data);
+        */
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStats();
+  }, [isAuthenticated, user]);
+
+  if (!isAuthenticated || !user) {
+    return (
+      <Alert
+        message="Unauthorized"
+        description="Please log in to view your request statistics."
+        type="warning"
+        showIcon
+        style={{ margin: "16px" }}
+      />
+    );
+  }
+
+  if (error) {
+    return (
+      <Alert
+        message="Error"
+        description={error}
+        type="error"
+        showIcon
+        style={{ margin: "16px" }}
+      />
+    );
+  }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-4">Create Request</h1>
-      <form onSubmit={handleSubmit} className="max-w-md mx-auto">
-        <div className="mb-4">
-          <label className="block mb-1">Item Type</label>
-          <select
-            value={form.itemType}
-            onChange={(e) => setForm({ ...form, itemType: e.target.value })}
-            className="w-full p-2 border rounded"
-            required
-          >
-            <option value="">Select Item Type</option>
-            {itemTypes.map((type) => (
-              <option
-                key={type._id}
-                value={type._id}
-                className="hover:bg-blue-300"
-              >
-                {type.name}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="mb-4">
-          <label className="block mb-1">Company</label>
-          <input
-            type="text"
-            value={form.company}
-            onChange={(e) => setForm({ ...form, company: e.target.value })}
-            className="w-full p-2 border rounded"
-            required
-          />
-        </div>
-        <div className="mb-4">
-          <label className="block mb-1">Amount</label>
-          <input
-            type="number"
-            value={form.amount}
-            onChange={(e) => setForm({ ...form, amount: e.target.value })}
-            className="w-full p-2 border rounded"
-            required
-          />
-        </div>
-        <div className="mb-4">
-          <label className="block mb-1">Note</label>
-          <textarea
-            value={form.note}
-            onChange={(e) => setForm({ ...form, note: e.target.value })}
-            className="w-full p-2 border rounded"
-          />
-        </div>
-        {error && <p className="text-red-500 mb-4">{error}</p>}
-        <button
-          type="submit"
-          className="bg-blue-600 text-white px-4 py-2 rounded"
-        >
-          Submit Request
-        </button>
-      </form>
+    <div style={{ padding: "24px", maxWidth: "1200px", margin: "0 auto" }}>
+      <Title level={2} style={{ marginBottom: "24px" }}>
+        Welcome, {user.username}!
+      </Title>
+      {loading ? (
+        <Spin size="large" style={{ display: "block", margin: "50px auto" }} />
+      ) : (
+        <Row gutter={[16, 16]}>
+          <Col xs={24} sm={12} md={8} lg={6}>
+            <Card>
+              <Statistic
+                title="Total Requests"
+                value={stats.total}
+                prefix={<FileTextOutlined />}
+                valueStyle={{ color: "#1890ff" }}
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={12} md={8} lg={6}>
+            <Card>
+              <Statistic
+                title="Approved"
+                value={stats.approved}
+                prefix={<CheckCircleOutlined />}
+                valueStyle={{ color: "#52c41a" }}
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={12} md={8} lg={6}>
+            <Card>
+              <Statistic
+                title="Rejected"
+                value={stats.rejected}
+                prefix={<CloseCircleOutlined />}
+                valueStyle={{ color: "#ff4d4f" }}
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={12} md={8} lg={6}>
+            <Card>
+              <Statistic
+                title="In Progress"
+                value={stats.doing}
+                prefix={<ClockCircleOutlined />}
+                valueStyle={{ color: "#fa8c16" }}
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={12} md={8} lg={6}>
+            <Card>
+              <Statistic
+                title="Completed"
+                value={stats.done}
+                prefix={<TrophyOutlined />}
+                valueStyle={{ color: "#722ed1" }}
+              />
+            </Card>
+          </Col>
+        </Row>
+      )}
     </div>
   );
-}
+};
 
 export default Home;

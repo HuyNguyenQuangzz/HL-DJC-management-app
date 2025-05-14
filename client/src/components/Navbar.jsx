@@ -1,161 +1,199 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-// import { useAuthStore } from "../store/useAuthStore";
-import useAuthStore from "../store/authStore";
-
+import { useContext, useState } from "react";
+import { AuthContext } from "../context/AuthContext";
+import { Menu, Dropdown, Drawer, Button, Avatar, Space } from "antd";
+import {
+  MenuOutlined,
+  DownOutlined,
+  CloseOutlined,
+  UserOutlined,
+} from "@ant-design/icons";
+import { Link } from "react-router-dom"; // Assuming you're using react-router for navigation
 
 function Navbar() {
-  const { user, logout } = useAuthStore();
-  const navigate = useNavigate();
+  const { isAuthenticated, userLevel, user, logout } = useContext(AuthContext);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   const handleLogout = () => {
     logout();
-    navigate("/login");
+    setIsDrawerOpen(false);
   };
 
+  // Dropdown menu for user profile and logout
+  const dropdownMenu = (
+    <Menu>
+      <Menu.Item key="profile">
+        <Link to="/profile">Profile</Link>
+      </Menu.Item>
+      <Menu.Item key="logout" onClick={handleLogout}>
+        Logout
+      </Menu.Item>
+    </Menu>
+  );
+
+  // Menu items for desktop based on user role
+  const desktopMenuItems =
+    userLevel === "admin" ? (
+      <Menu
+        mode="horizontal"
+        style={{ background: "transparent", border: "none", color: "white" }}
+      >
+        <Menu.Item key="dashboard">
+          <Link to="/dashboard">Dashboard</Link>
+        </Menu.Item>
+        <Menu.Item key="item-types">
+          <Link to="/item-types">Item Types</Link>
+        </Menu.Item>
+        <Menu.Item key="history">
+          <Link to="/history">History</Link>
+        </Menu.Item>
+      </Menu>
+    ) : (
+      <Menu
+        mode="horizontal"
+        style={{ background: "transparent", border: "none", color: "white" }}
+      >
+        <Menu.Item key="home">
+          <Link to="/">Home</Link>
+        </Menu.Item>
+        <Menu.Item key="create-request">
+          <Link to="/create-request">Create Request</Link>
+        </Menu.Item>
+      </Menu>
+    );
+
+  // Menu items for mobile drawer based on user role
+  const mobileMenuItems =
+    userLevel === "admin" ? (
+      <>
+        <Menu.Item key="dashboard">
+          <Link to="/dashboard" onClick={() => setIsDrawerOpen(false)}>
+            Dashboard
+          </Link>
+        </Menu.Item>
+        <Menu.Item key="history">
+          <Link to="/history" onClick={() => setIsDrawerOpen(false)}>
+            History
+          </Link>
+        </Menu.Item>
+      </>
+    ) : (
+      <>
+        <Menu.Item key="home">
+          <Link to="/" onClick={() => setIsDrawerOpen(false)}>
+            Home
+          </Link>
+        </Menu.Item>
+        <Menu.Item key="create-request">
+          <Link to="/create-request" onClick={() => setIsDrawerOpen(false)}>
+            Create Request
+          </Link>
+        </Menu.Item>
+      </>
+    );
+
   return (
-    <nav className="sticky top-0 bg-blue-600 text-white shadow-md z-50">
-      <div className="container mx-auto px-4 py-3 flex justify-between items-center">
-        <div className="text-lg font-bold">Request App</div>
+    <nav
+      style={{
+        position: "sticky",
+        top: 0,
+        background: "white",
+        color: "white",
+        boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+        zIndex: 50,
+      }}
+    >
+      <div
+        style={{
+          maxWidth: "1200px",
+          margin: "0 auto",
+          padding: "12px 16px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        <Link
+          to="/"
+          style={{ fontSize: "18px", fontWeight: "bold", color: "black" }}
+        >
+          Request App
+        </Link>
+
         {user ? (
           <>
             {/* Desktop Menu */}
-            <div className="hidden md:flex items-center space-x-4">
-              {user.level === "admin" ? (
-                <>
-                  <a href="/dashboard" className="hover:text-gray-200">
-                    Dashboard
-                  </a>
-                  <a href="/history" className="hover:text-gray-200">
-                    History
-                  </a>
-                </>
-              ) : (
-                <a href="/home" className="hover:text-gray-200">
-                  Home
-                </a>
-              )}
-              <div className="relative">
-                <button
-                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  className="flex items-center space-x-1 hover:text-gray-200"
-                >
-                  <span>{user.username}</span>
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M19 9l-7 7-7-7"
-                    />
-                  </svg>
-                </button>
-                {isDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white text-gray-800 rounded-md shadow-lg">
-                    <a
-                      href="/profile"
-                      className="block px-4 py-2 hover:bg-gray-100"
-                    >
-                      Profile
-                    </a>
-                    <button
-                      onClick={handleLogout}
-                      className="block w-full text-left px-4 py-2 grahover:bg-gray-100"
-                    >
-                      Logout
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-            {/* Mobile Menu Button */}
-            <button className="md:hidden" onClick={() => setIsDrawerOpen(true)}>
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "16px",
+              }}
+              className="hidden md:flex"
+            >
+              {desktopMenuItems}
+              <Dropdown
+                overlay={dropdownMenu}
+                onOpenChange={(open) => setIsDropdownOpen(open)}
+                open={isDropdownOpen}
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M4 6h16M4 12h16m-7 6h7"
-                />
-              </svg>
-            </button>
+                <Button type="text" style={{ color: "black", padding: 0 }}>
+                  <Space>
+                    <Avatar icon={<UserOutlined />} />
+                    {user.username}
+                    <DownOutlined />
+                  </Space>
+                </Button>
+              </Dropdown>
+            </div>
+
+            {/* Mobile Menu Button */}
+            <Button
+              type="text"
+              icon={<MenuOutlined />}
+              onClick={() => setIsDrawerOpen(true)}
+              style={{ color: "white", display: "none" }}
+              className="md:hidden"
+            />
           </>
         ) : (
-          <div className="space-x-4">
-            <a href="/login" className="hover:text-gray-200">
-              Login
-            </a>
-            <a href="/signup" className="hover:text-gray-200">
-              Signup
-            </a>
-          </div>
+          <Space>
+            <Link to="/login">
+              <Button type="text" style={{ color: "white" }}>
+                Login
+              </Button>
+            </Link>
+            <Link to="/signup">
+              <Button type="text" style={{ color: "white" }}>
+                Signup
+              </Button>
+            </Link>
+          </Space>
         )}
       </div>
+
       {/* Mobile Drawer */}
-      {isDrawerOpen && (
-        <div className="md:hidden fixed inset-0 bg-gray-800 bg-opacity-75 z-50">
-          <div className="bg-white w-64 h-full p-4">
-            <button
-              onClick={() => setIsDrawerOpen(false)}
-              className="mb-4 text-gray-800"
-            >
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
-            <div className="flex flex-col space-y-4">
-              {user?.level === "admin" ? (
-                <>
-                  <a href="/dashboard" onClick={() => setIsDrawerOpen(false)}>
-                    Dashboard
-                  </a>
-                  <a href="/history" onClick={() => setIsDrawerOpen(false)}>
-                    History
-                  </a>
-                </>
-              ) : (
-                <a href="/home" onClick={() => setIsDrawerOpen(false)}>
-                  Home
-                </a>
-              )}
-              <a href="/profile" onClick={() => setIsDrawerOpen(false)}>
-                Profile
-              </a>
-              <button
-                onClick={() => {
-                  handleLogout();
-                  setIsDrawerOpen(false);
-                }}
-                className="text-left"
-              >
-                Logout
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <Drawer
+        style={{ background: "blue", color: "black" }}
+        title="Menu"
+        placement="right"
+        onClose={() => setIsDrawerOpen(false)}
+        open={isDrawerOpen}
+        closeIcon={<CloseOutlined />}
+        width={250}
+      >
+        <Menu mode="vertical">
+          {mobileMenuItems}
+          <Menu.Item key="profile">
+            <Link to="/profile" onClick={() => setIsDrawerOpen(false)}>
+              Profile
+            </Link>
+          </Menu.Item>
+          <Menu.Item key="logout" onClick={handleLogout}>
+            Logout
+          </Menu.Item>
+        </Menu>
+      </Drawer>
     </nav>
   );
 }
